@@ -1,4 +1,4 @@
-from src.mcp_handler import run
+from mcp_server import run
 
 if __name__ == "__main__":
     run()

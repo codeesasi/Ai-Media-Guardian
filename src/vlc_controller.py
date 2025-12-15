@@ -3,43 +3,66 @@ import time
 import requests
 import urllib.parse
 from requests.auth import HTTPBasicAuth
-from config.settings import (VLC_Host, VLC_Password, VLC_Path, VLC_Port,VLC_Strat_timeout)
+from config.settings import (
+VLC_PATH,
+VLC_HOST,
+VLC_PORT,
+VLC_PASSWORD,
+VLC_STARTUP_WAIT,
+)
 
 class VLCController:
+    """Low-level VLC HTTP controller (NO AI, NO MCP logic here)"""
+
+
     def __init__(self):
-        self.base_url = f"{VLC_Host}/requests/status.json"
+        self.base_url = f"{VLC_HOST}/requests/status.json"
+
 
     def start(self):
         subprocess.Popen([
-            VLC_Path,"--extraintf","http",
-            "--http-password",VLC_Password,
-            "--http-port",VLC_Port
+        VLC_PATH,
+        "--extraintf", "http",
+        "--http-password", VLC_PASSWORD,
+        "--http-port", VLC_PORT,
         ])
-        time.sleep(VLC_Strat_timeout)
+        time.sleep(VLC_STARTUP_WAIT)
 
-    def _send(self, command, params=None):
+
+    def _send(self, command=None, params=None):
         params = params or {}
-        params["command"] = command
+        if command:
+            params["command"] = command
 
-        req = requests.get(self.base_url,
-                           params=params,
-                           auth=HTTPBasicAuth("",VLC_Password),
-                           timeout=VLC_Strat_timeout)
 
-        req.raise_for_status()
-        return req.json()
-    
-    def play(self, filepath):
-        url_path = urllib.parse.quote(filepath.replace("\\",'/'), safe=":/")
-        return self._send("in_play",{"input":f"file:///{url_path}"})
-    
+        r = requests.get(
+        self.base_url,
+        params=params,
+        auth=HTTPBasicAuth("", VLC_PASSWORD),
+        timeout=5,
+        )
+        r.raise_for_status()
+        return r.json()
+
+
+    def play(self, file_path: str):
+        url_path = urllib.parse.quote(
+        file_path.replace("\\", "/"), safe=":/"
+        )
+        return self._send(
+        "in_play",
+        {"input": f"file:///{url_path}"},
+        )
+
+
     def pause(self):
         return self._send("pl_pause")
-    
-    def seek(self, second):
-        val = f"{second}s" if second < 0 else f"+{second}s"
-        return self._send("seek", {"val":val})
-    
+
+
+    def seek(self, seconds: int):
+        val = f"+{seconds}s" if seconds >= 0 else f"{seconds}s"
+        return self._send("seek", {"val": val})
+
+
     def status(self):
-        return self._send("")
-    
+        return self._send()
