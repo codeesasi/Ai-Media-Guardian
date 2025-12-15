@@ -1,4 +1,4 @@
-from mcp_server import run
+from mcp_server import main
 
 if __name__ == "__main__":
-    run()
+    main()

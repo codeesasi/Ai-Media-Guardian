@@ -1,3 +1,7 @@
+"""
+Docstring for config.settings
+"""
+
 # VLC executable path
 VLC_PATH = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
 

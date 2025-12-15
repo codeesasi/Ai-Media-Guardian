@@ -1,79 +1,94 @@
-from mcp.server import Server
-from mcp.types import TextContent
-from src.vlc_controller import VLCController
+from mcp.server.fastmcp import FastMCP
+from vlc_controller import VLCController
 
-
-# Initialize VLC
-vlc = VLCController()
-vlc.start()
-
-
-# Create MCP server
-server = Server(
-name="vlc-mcp-controller",
-description="MCP server exposing VLC Media Player controls",
+mcp = FastMCP(
+    name="vlc-mcp-controller"
 )
 
+vlc = VLCController()
+vlc_started = False
 
 
-
-@server.tool(
-    name="play_video",
-    description="Play a local video file in VLC",
-    input_schema={
-    "type": "object",
-    "properties": {
-    "path": {
-    "type": "string",
-    "description": "Absolute path to the video file",
-    }
-    },
-    "required": ["path"],
-    },
-    )
-def play_video(path: str):
+@mcp.tool()
+def play_video(path: str) -> str:
+    global vlc_started
+    if not path:
+        return "ERROR: path is required"
+    if not vlc_started:
+        vlc.start()
+        vlc_started = True
     vlc.play(path)
-    return [TextContent(text=f"Playing video: {path}")]
+    return f"Playing video: {path}"
 
 
+@mcp.tool()
+def load_video(path: str) -> str:
+    global vlc_started
+    if not path:
+        return "ERROR: path is required"
+    if not vlc_started:
+        vlc.start()
+        vlc_started = True
+    vlc.load(path)
+    return f"Loaded video: {path}"
 
 
-@server.tool(
-    name="pause",
-    description="Pause or resume VLC playback",
-    )
-def pause():
+@mcp.tool()
+def pause() -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
     vlc.pause()
-    return [TextContent(text="Playback toggled")]
+    return "Playback toggled"
 
-@server.tool(
-    name="seek",
-    description="Seek playback by seconds",
-    input_schema={
-    "type": "object",
-    "properties": {
-    "seconds": {
-    "type": "integer",
-    "description": "Seconds to seek (+forward, -backward)",
-    }
-    },
-    "required": ["seconds"],
-    },
-    )
-def seek(seconds: int):
+
+@mcp.tool()
+def stop() -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
+    vlc.stop()
+    return "Playback stopped"
+
+
+@mcp.tool()
+def seek(seconds: int) -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
     vlc.seek(seconds)
-    return [TextContent(text=f"Seeked {seconds} seconds")]
+    return f"Seeked {seconds} seconds"
 
 
+@mcp.tool()
+def set_volume(level: int) -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
+    vlc.set_volume(level)
+    return f"Volume set to {level}"
 
 
-@server.tool(
-    name="status",
-    description="Get current VLC playback status",
-    )
-def status():
-    s = vlc.status()
-    return [TextContent(text=str(s))]
+@mcp.tool()
+def mute() -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
+    vlc.mute()
+    return "Muted"
 
-def run():
-    server.run()
+
+@mcp.tool()
+def status() -> str:
+    if not vlc_started:
+        return "VLC not started yet"
+    return str(vlc.status())
+
+
+@mcp.tool()
+def shutdown_vlc() -> str:
+    global vlc_started
+    if not vlc_started:
+        return "VLC not running"
+    vlc.shutdown()
+    vlc_started = False
+    return "VLC shutdown"
+
+def main():
+    # Initialize and run the server
+    mcp.run(transport="stdio")
