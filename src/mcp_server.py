@@ -8,28 +8,21 @@ mcp = FastMCP(
 vlc = VLCController()
 vlc_started = False
 
-
 @mcp.tool()
-def play_video(path: str) -> str:
+def launch_vlc() -> str:
     global vlc_started
-    if not path:
-        return "ERROR: path is required"
     if not vlc_started:
         vlc.start()
         vlc_started = True
-    vlc.play(path)
-    return f"Playing video: {path}"
 
+    return "VLC Launched successfully"
 
 @mcp.tool()
 def load_video(path: str) -> str:
-    global vlc_started
     if not path:
         return "ERROR: path is required"
-    if not vlc_started:
-        vlc.start()
-        vlc_started = True
-    vlc.load(path)
+    launch_vlc()
+    vlc.play(path)
     return f"Loaded video: {path}"
 
 
@@ -88,6 +81,66 @@ def shutdown_vlc() -> str:
     vlc.shutdown()
     vlc_started = False
     return "VLC shutdown"
+
+# ---------- Video tools ----------
+
+@mcp.tool()
+def set_brightness(value: float) -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
+    vlc.set_brightness(value)
+    return f"Brightness set to {value}"
+
+
+@mcp.tool()
+def aspect_ratio(ratio: str) -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
+    vlc.set_aspect_ratio(ratio)
+    return f"Aspect ratio set to {ratio}"
+
+
+@mcp.tool()
+def crop(ratio: str) -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
+    vlc.set_crop(ratio)
+    return f"Crop set to {ratio}"
+
+
+@mcp.tool()
+def fullscreen() -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
+    vlc.fullscreen()
+    return "Fullscreen toggled"
+
+
+@mcp.tool()
+def take_snapshot() -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
+    vlc.snapshot()
+    return "Snapshot taken"
+
+
+# ---------- Audio tools ----------
+
+@mcp.tool()
+def audio_speed(rate: float) -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
+    vlc.set_playback_rate(rate)
+    return f"Playback speed set to {rate}"
+
+
+@mcp.tool()
+def audio_device(device_id: str) -> str:
+    if not vlc_started:
+        return "ERROR: VLC is not running"
+    vlc.set_audio_device(device_id)
+    return f"Audio device set to {device_id}"
+
 
 def main():
     # Initialize and run the server

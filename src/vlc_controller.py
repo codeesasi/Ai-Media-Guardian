@@ -72,5 +72,28 @@ class VLCController:
     def shutdown(self):
         self._send("quit")
 
-    def load(self, path: str):
-        self._send("in_enqueue", {"input": path})
+    def set_brightness(self, value: float):
+        # value: 0.0 – 2.0 (1.0 = normal)
+        self._send("brightness", {"val": value})
+
+    def set_aspect_ratio(self, ratio: str):
+        # examples: "16:9", "4:3", "1:1", "21:9"
+        self._send("aspect-ratio", {"val": ratio})
+
+    def set_crop(self, crop: str):
+        # examples: "16:9", "4:3", "1:1"
+        self._send("crop", {"val": crop})
+
+    def fullscreen(self):
+        self._send("fullscreen")
+
+    def snapshot(self):
+        self._send("snapshot")
+
+    def set_playback_rate(self, rate: float):
+        # examples: 0.5, 1.0, 1.25, 1.5, 2.0
+        self._send("rate", {"val": rate})
+
+    def set_audio_device(self, device_id: str):
+        # device_id from VLC audio-device list
+        self._send("adev", {"val": device_id})
