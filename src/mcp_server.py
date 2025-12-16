@@ -70,7 +70,7 @@ def mute() -> str:
 def status() -> str:
     if not vlc_started:
         return "VLC not started yet"
-    return str(vlc.status())
+    return str(vlc.current_media_info())
 
 
 @mcp.tool()
@@ -140,6 +140,24 @@ def audio_device(device_id: str) -> str:
         return "ERROR: VLC is not running"
     vlc.set_audio_device(device_id)
     return f"Audio device set to {device_id}"
+
+@mcp.tool()
+def list_audio_devices() -> list:
+    if not vlc_started:
+        return ["ERROR: VLC is not running"]
+    return vlc.list_audio_devices()
+
+@mcp.tool()
+def list_audio_outputs() -> list:
+    if not vlc_started:
+        return ["ERROR: VLC is not running"]
+    return vlc.list_audio_outputs()
+
+@mcp.tool()
+def list_video_outputs() -> list:
+    if not vlc_started:
+        return ["ERROR: VLC is not running"]
+    return vlc.list_video_outputs()
 
 
 def main():

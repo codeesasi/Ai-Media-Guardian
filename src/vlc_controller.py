@@ -10,6 +10,7 @@ from settings import (
     VLC_PASSWORD,
     VLC_STARTUP_WAIT,
 )
+import socket
 
 
 class VLCController:
@@ -18,6 +19,11 @@ class VLCController:
     def __init__(self):
         self.base_url = f"{VLC_HOST}/requests/status.json"
 
+    def _rc_command(self, cmd: str) -> str:
+        with socket.create_connection(("127.0.0.1", 4212), timeout=2) as s:
+            s.sendall((cmd + "\n").encode())
+            return s.recv(8192).decode(errors="ignore")
+        
     def start(self):
         subprocess.Popen([
             VLC_PATH,
@@ -97,3 +103,50 @@ class VLCController:
     def set_audio_device(self, device_id: str):
         # device_id from VLC audio-device list
         self._send("adev", {"val": device_id})
+
+    def list_audio_devices(self) -> list[str]:
+        output = self._rc_command("adev")
+        devices = []
+        for line in output.splitlines():
+            line = line.strip()
+            if line.startswith("*"):
+                devices.append(line.lstrip("*").strip())
+        return devices
+    
+    def list_audio_outputs(self) -> list[str]:
+        output = self._rc_command("aout")
+        outputs = []
+        for line in output.splitlines():
+            line = line.strip()
+            if line.startswith("*"):
+                outputs.append(line.lstrip("*").strip())
+        return outputs
+    
+    def list_video_outputs(self) -> list[str]:
+        output = self._rc_command("vout")
+        vouts = []
+        for line in output.splitlines():
+            line = line.strip()
+            if line.startswith("*"):
+                vouts.append(line.lstrip("*").strip())
+        return vouts
+
+    def current_media_info(self) -> dict:
+        status = self.status()
+
+        info = {}
+        meta = status.get("information", {}).get("category", {}).get("meta", {})
+
+        info["title"] = meta.get("title")
+        info["artist"] = meta.get("artist")
+        info["album"] = meta.get("album")
+
+        info["duration"] = status.get("length")
+        info["position"] = status.get("time")
+        info["state"] = status.get("state")
+        info["rate"] = status.get("rate")
+        info["volume"] = status.get("volume")
+
+        return info
+
+
