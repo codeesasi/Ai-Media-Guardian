@@ -317,6 +317,14 @@ def list_video_outputs() -> list:
         return ["ERROR: VLC is not running"]
     return vlc.list_video_outputs()
 
+@mcp.tool()
+def list_movies(refresh: bool = False) -> dict:
+    """
+    List movies from configured folder in JSON format.
+    """
+    return vlc.list_movies(refresh=refresh)
+
+
 def main():
     # Initialize and run the server
     mcp.run(transport="stdio")

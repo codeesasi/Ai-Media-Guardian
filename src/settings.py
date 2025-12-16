@@ -14,3 +14,7 @@ VLC_PASSWORD = "test123"
 
 # Wait time for VLC HTTP server to start
 VLC_STARTUP_WAIT = 4 # seconds
+
+MOVIES_DIR = r"E:\Movies"
+
+VIDEO_EXTENSIONS = {".mp4", ".mkv", ".avi", ".mov", ".webm"}

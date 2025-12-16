@@ -1,6 +1,5 @@
-import subprocess
-import time
-import requests
+import subprocess, os
+import time,socket,requests
 import urllib.parse
 from requests.auth import HTTPBasicAuth
 from settings import (
@@ -9,12 +8,12 @@ from settings import (
     VLC_PORT,
     VLC_PASSWORD,
     VLC_STARTUP_WAIT,
+    MOVIES_DIR, VIDEO_EXTENSIONS
 )
-import socket
-
 
 class VLCController:
     """Low-level VLC HTTP controller (NO AI, NO MCP logic here)"""
+    _movie_cache = None
 
     def __init__(self):
         self.base_url = f"{VLC_HOST}/requests/status.json"
@@ -283,3 +282,76 @@ class VLCController:
         info["volume"] = status.get("volume")
 
         return info
+    
+    def list_movies(self, refresh: bool = False) -> dict:
+        """
+        Returns movies in structured JSON format.
+        - Supports movie files
+        - Supports movie folders with internal video files
+        - One-level scan only (optimized)
+        """
+        if self._movie_cache is not None and not refresh:
+            return self._movie_cache
+
+        movies = []
+
+        try:
+            with os.scandir(MOVIES_DIR) as entries:
+                for entry in entries:
+
+                    # -------- Case 1: Movie file directly --------
+                    if entry.is_file():
+                        ext = os.path.splitext(entry.name)[1].lower()
+                        if ext in VIDEO_EXTENSIONS:
+                            movies.append({
+                                "name": os.path.splitext(entry.name)[0],
+                                "type": "file",
+                                "files": [
+                                    {
+                                        "filename": entry.name,
+                                        "path": entry.path
+                                    }
+                                ]
+                            })
+
+                    # -------- Case 2: Movie folder --------
+                    elif entry.is_dir():
+                        video_files = []
+
+                        try:
+                            with os.scandir(entry.path) as sub_entries:
+                                for sub in sub_entries:
+                                    if sub.is_file():
+                                        ext = os.path.splitext(sub.name)[1].lower()
+                                        if ext in VIDEO_EXTENSIONS:
+                                            video_files.append({
+                                                "filename": sub.name,
+                                                "path": sub.path
+                                            })
+                        except PermissionError:
+                            pass
+
+                        movies.append({
+                            "name": entry.name,
+                            "type": "folder",
+                            "files": video_files
+                        })
+
+        except FileNotFoundError:
+            return {
+                "root": MOVIES_DIR,
+                "count": 0,
+                "movies": [],
+                "error": "MOVIES_DIR not found"
+            }
+
+        result = {
+            "source": "folder_scan",
+            "root": MOVIES_DIR,
+            "count": len(movies),
+            "movies": sorted(movies, key=lambda x: x["name"].lower())
+        }
+
+        self._movie_cache = result
+        return result
+
