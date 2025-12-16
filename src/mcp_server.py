@@ -148,7 +148,7 @@ def list_audio_devices() -> list:
     return vlc.list_audio_devices()
 
 @mcp.tool()
-def list_audio_outputs() -> list:
+def list_audio_drive() -> list:
     if not vlc_started:
         return ["ERROR: VLC is not running"]
     return vlc.list_audio_outputs()
@@ -158,7 +158,6 @@ def list_video_outputs() -> list:
     if not vlc_started:
         return ["ERROR: VLC is not running"]
     return vlc.list_video_outputs()
-
 
 def main():
     # Initialize and run the server

@@ -79,7 +79,11 @@ class VLCController:
         self._send("quit")
 
     def set_brightness(self, value: float):
-        # value: 0.0 – 2.0 (1.0 = normal)
+        """
+        Controll display brightness
+
+        Value: 0.0 – 2.0 (1.0 = normal)
+        """
         self._send("brightness", {"val": value})
 
     def set_aspect_ratio(self, ratio: str):
@@ -87,7 +91,7 @@ class VLCController:
         self._send("aspect-ratio", {"val": ratio})
 
     def set_crop(self, crop: str):
-        # examples: "16:9", "4:3", "1:1"
+        """Examples: "16:9", "4:3", "1:1"""
         self._send("crop", {"val": crop})
 
     def fullscreen(self):
@@ -105,6 +109,11 @@ class VLCController:
         self._send("adev", {"val": device_id})
 
     def list_audio_devices(self) -> list[str]:
+        """
+            Audio Device = the tap\n
+            Examples: Speakers (Realtek), Headphones, HDMI, Bluetooth Earbuds \n
+            These are physical / logical endpoints, You switch these frequently.
+        """
         output = self._rc_command("adev")
         devices = []
         for line in output.splitlines():
@@ -114,6 +123,11 @@ class VLCController:
         return devices
     
     def list_audio_outputs(self) -> list[str]:
+        """
+            Audio Output = the pipe \n
+            Examples: directsound, wasapi, alsa, pulse, coreaudio \n
+            These are audio backends, they interface with the OS audio stack.
+        """
         output = self._rc_command("aout")
         outputs = []
         for line in output.splitlines():
@@ -123,6 +137,11 @@ class VLCController:
         return outputs
     
     def list_video_outputs(self) -> list[str]:
+        """
+            Video Output = the renderer \n
+            It means video rendering backends — the graphics engine VLC uses to draw frames. \n
+            Examples: direct3d11, direct3d9, opengl, xvideo, wayland, x11
+        """
         output = self._rc_command("vout")
         vouts = []
         for line in output.splitlines():
