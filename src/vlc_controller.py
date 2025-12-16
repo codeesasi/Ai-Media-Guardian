@@ -20,11 +20,23 @@ class VLCController:
         self.base_url = f"{VLC_HOST}/requests/status.json"
 
     def _rc_command(self, cmd: str) -> str:
+        """
+        Sends a command to VLC using the remote control interface.
+
+        Args:
+            cmd (str): The command to send.
+
+        Returns:
+            str: The output of the command.
+        """
         with socket.create_connection(("127.0.0.1", 4212), timeout=2) as s:
             s.sendall((cmd + "\n").encode())
             return s.recv(8192).decode(errors="ignore")
-        
+
     def start(self):
+        """
+        Starts the VLC media player as a subprocess.
+        """
         subprocess.Popen([
             VLC_PATH,
             "--extraintf", "http",
@@ -34,6 +46,17 @@ class VLCController:
         time.sleep(VLC_STARTUP_WAIT)
 
     def _send(self, command=None, params=None):
+        """
+            Send a GET request to the VLC HTTP interface.\n
+            Parameters
+                command : str, optional
+                    The VLC command to execute (e.g., ``'pl_play'``). If provided, it is added
+                    to the query parameters as ``command``.\n
+
+                params : dict, optional
+                    Additional query‑string parameters to include in the request. If ``None``,
+                    an empty dict is created.
+        """
         params = params or {}
         if command:
             params["command"] = command
@@ -48,6 +71,15 @@ class VLCController:
         return r.json()
 
     def play(self, file_path: str):
+        """
+        Plays a media file.
+
+        Args:
+            file_path (str): The path to the file to play.
+
+        Returns:
+            dict: The JSON response from the VLC server.
+        """
         url_path = urllib.parse.quote(
             file_path.replace("\\", "/"), safe=":/"
         )
@@ -57,63 +89,133 @@ class VLCController:
         )
 
     def pause(self):
+        """
+        Pauses or resumes playback.
+
+        Returns:
+            dict: The JSON response from the VLC server.
+        """
         return self._send("pl_pause")
 
     def seek(self, seconds: int):
+        """
+        Seeks to a specific position in the media.
+
+        Args:
+            seconds (int): The number of seconds to seek. Positive values seek forward, negative values seek backward.
+
+        Returns:
+            dict: The JSON response from the VLC server.
+        """
         val = f"+{seconds}s" if seconds >= 0 else f"{seconds}s"
         return self._send("seek", {"val": val})
 
     def status(self):
+        """
+        Gets the current status of VLC.
+
+        Returns:
+            dict: The JSON response from the VLC server.
+        """
         return self._send()
-    
+
     def stop(self):
+        """
+        Stops playback.
+        """
         self._send("pl_stop")
 
     def set_volume(self, level: int):
+        """
+        Sets the volume level.
+
+        Args:
+            level (int): The volume level (0-100).
+        """
         self._send("volume", {"val": level})
 
     def mute(self):
+        """
+        Mutes the audio.
+        """
         self._send("volume", {"val": 0})
 
     def shutdown(self):
+        """
+        Shuts down VLC.
+        """
         self._send("quit")
 
     def set_brightness(self, value: float):
         """
-        Controll display brightness
+        Controls display brightness.
 
         Value: 0.0 – 2.0 (1.0 = normal)
         """
         self._send("brightness", {"val": value})
 
     def set_aspect_ratio(self, ratio: str):
+        """
+        Sets the aspect ratio of the video output.
+
+        Args:
+            ratio (str): The aspect ratio (e.g., "16:9", "4:3").
+        """
         # examples: "16:9", "4:3", "1:1", "21:9"
         self._send("aspect-ratio", {"val": ratio})
 
     def set_crop(self, crop: str):
-        """Examples: "16:9", "4:3", "1:1"""
+        """
+        Sets the crop ratio of the video output.
+
+        Args:
+            crop (str): The crop ratio (e.g., "16:9", "4:3").
+        """
+        # Examples: "16:9", "4:3", "1:1"
         self._send("crop", {"val": crop})
 
     def fullscreen(self):
+        """
+        Toggles fullscreen mode.
+        """
         self._send("fullscreen")
 
     def snapshot(self):
+        """
+        Takes a snapshot of the current video frame.
+        """
         self._send("snapshot")
 
     def set_playback_rate(self, rate: float):
+        """
+        Sets the playback rate.
+
+        Args:
+            rate (float): The playback rate (e.g., 0.5, 1.0, 1.25, 1.5, 2.0).
+        """
         # examples: 0.5, 1.0, 1.25, 1.5, 2.0
         self._send("rate", {"val": rate})
 
     def set_audio_device(self, device_id: str):
+        """
+        Sets the audio output device.
+
+        Args:
+            device_id (str): The ID of the audio output device.
+        """
         # device_id from VLC audio-device list
         self._send("adev", {"val": device_id})
 
     def list_audio_devices(self) -> list[str]:
         """
-            Audio Device = the tap\n
-            Examples: Speakers (Realtek), Headphones, HDMI, Bluetooth Earbuds \n
-            These are physical / logical endpoints, You switch these frequently.
+        Lists available audio output devices.
+
+        Returns:
+            list[str]: A list of available audio output device IDs.
         """
+        # Audio Device = the tap
+        # Examples: Speakers (Realtek), Headphones, HDMI, Bluetooth Earbuds
+        # These are physical / logical endpoints, You switch these frequently.
         output = self._rc_command("adev")
         devices = []
         for line in output.splitlines():
@@ -121,13 +223,17 @@ class VLCController:
             if line.startswith("*"):
                 devices.append(line.lstrip("*").strip())
         return devices
-    
+
     def list_audio_outputs(self) -> list[str]:
         """
-            Audio Output = the pipe \n
-            Examples: directsound, wasapi, alsa, pulse, coreaudio \n
-            These are audio backends, they interface with the OS audio stack.
+        Lists available audio outputs.
+
+        Returns:
+            list[str]: A list of available audio output backends.
         """
+        # Audio Output = the pipe
+        # Examples: directsound, wasapi, alsa, pulse, coreaudio
+        # These are audio backends, they interface with the OS audio stack.
         output = self._rc_command("aout")
         outputs = []
         for line in output.splitlines():
@@ -135,13 +241,17 @@ class VLCController:
             if line.startswith("*"):
                 outputs.append(line.lstrip("*").strip())
         return outputs
-    
+
     def list_video_outputs(self) -> list[str]:
         """
-            Video Output = the renderer \n
-            It means video rendering backends — the graphics engine VLC uses to draw frames. \n
-            Examples: direct3d11, direct3d9, opengl, xvideo, wayland, x11
+        Lists available video outputs.
+
+        Returns:
+            list[str]: A list of available video output renderers.
         """
+        # Video Output = the renderer
+        # It means video rendering backends — the graphics engine VLC uses to draw frames.
+        # Examples: direct3d11, direct3d9, opengl, xvideo, wayland, x11
         output = self._rc_command("vout")
         vouts = []
         for line in output.splitlines():
@@ -151,6 +261,12 @@ class VLCController:
         return vouts
 
     def current_media_info(self) -> dict:
+        """
+        Retrieves the current media information.
+
+        Returns:
+            dict: A dictionary containing the title, artist, album, duration, position, state, volume, and rate of the currently playing media.
+        """
         status = self.status()
 
         info = {}
@@ -167,5 +283,3 @@ class VLCController:
         info["volume"] = status.get("volume")
 
         return info
-
-
