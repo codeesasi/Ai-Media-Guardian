@@ -294,30 +294,6 @@ def list_audio_devices() -> list:
     return vlc.list_audio_devices()
 
 @mcp.tool()
-def list_audio_drive() -> list:
-    """
-    Lists available audio outputs in VLC.
-
-    Returns:
-        list: A list of available audio output device IDs, or an error message if VLC is not running.
-    """
-    if not vlc_started:
-        return ["ERROR: VLC is not running"]
-    return vlc.list_audio_outputs()
-
-@mcp.tool()
-def list_video_outputs() -> list:
-    """
-    Lists available video outputs in VLC.
-
-    Returns:
-        list: A list of available video output device IDs, or an error message if VLC is not running.
-    """
-    if not vlc_started:
-        return ["ERROR: VLC is not running"]
-    return vlc.list_video_outputs()
-
-@mcp.tool()
 def list_movies(refresh: bool = False) -> dict:
     """
     List movies from configured folder in JSON format.

@@ -223,42 +223,6 @@ class VLCController:
                 devices.append(line.lstrip("*").strip())
         return devices
 
-    def list_audio_outputs(self) -> list[str]:
-        """
-        Lists available audio outputs.
-
-        Returns:
-            list[str]: A list of available audio output backends.
-        """
-        # Audio Output = the pipe
-        # Examples: directsound, wasapi, alsa, pulse, coreaudio
-        # These are audio backends, they interface with the OS audio stack.
-        output = self._rc_command("aout")
-        outputs = []
-        for line in output.splitlines():
-            line = line.strip()
-            if line.startswith("*"):
-                outputs.append(line.lstrip("*").strip())
-        return outputs
-
-    def list_video_outputs(self) -> list[str]:
-        """
-        Lists available video outputs.
-
-        Returns:
-            list[str]: A list of available video output renderers.
-        """
-        # Video Output = the renderer
-        # It means video rendering backends — the graphics engine VLC uses to draw frames.
-        # Examples: direct3d11, direct3d9, opengl, xvideo, wayland, x11
-        output = self._rc_command("vout")
-        vouts = []
-        for line in output.splitlines():
-            line = line.strip()
-            if line.startswith("*"):
-                vouts.append(line.lstrip("*").strip())
-        return vouts
-
     def current_media_info(self) -> dict:
         """
         Retrieves the current media information.
