@@ -1,4 +1,4 @@
-import subprocess, os
+import subprocess, os, time
 import time,socket,requests
 import urllib.parse
 from requests.auth import HTTPBasicAuth
@@ -17,20 +17,6 @@ class VLCController:
 
     def __init__(self):
         self.base_url = f"{VLC_HOST}/requests/status.json"
-
-    def _rc_command(self, cmd: str) -> str:
-        """
-        Sends a command to VLC using the remote control interface.
-
-        Args:
-            cmd (str): The command to send.
-
-        Returns:
-            str: The output of the command.
-        """
-        with socket.create_connection(("127.0.0.1", 4212), timeout=2) as s:
-            s.sendall((cmd + "\n").encode())
-            return s.recv(8192).decode(errors="ignore")
 
     def start(self):
         """
@@ -139,20 +125,6 @@ class VLCController:
         """
         self._send("volume", {"val": 0})
 
-    def shutdown(self):
-        """
-        Shuts down VLC.
-        """
-        self._send("quit")
-
-    def set_brightness(self, value: float):
-        """
-        Controls display brightness.
-
-        Value: 0.0 – 2.0 (1.0 = normal)
-        """
-        self._send("brightness", {"val": value})
-
     def set_aspect_ratio(self, ratio: str):
         """
         Sets the aspect ratio of the video output.
@@ -194,34 +166,6 @@ class VLCController:
         """
         # examples: 0.5, 1.0, 1.25, 1.5, 2.0
         self._send("rate", {"val": rate})
-
-    def set_audio_device(self, device_id: str):
-        """
-        Sets the audio output device.
-
-        Args:
-            device_id (str): The ID of the audio output device.
-        """
-        # device_id from VLC audio-device list
-        self._send("adev", {"val": device_id})
-
-    def list_audio_devices(self) -> list[str]:
-        """
-        Lists available audio output devices.
-
-        Returns:
-            list[str]: A list of available audio output device IDs.
-        """
-        # Audio Device = the tap
-        # Examples: Speakers (Realtek), Headphones, HDMI, Bluetooth Earbuds
-        # These are physical / logical endpoints, You switch these frequently.
-        output = self._rc_command("adev")
-        devices = []
-        for line in output.splitlines():
-            line = line.strip()
-            if line.startswith("*"):
-                devices.append(line.lstrip("*").strip())
-        return devices
 
     def current_media_info(self) -> dict:
         """

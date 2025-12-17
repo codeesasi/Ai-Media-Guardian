@@ -149,41 +149,7 @@ def status() -> str:
     return str(vlc.current_media_info())
 
 
-@mcp.tool()
-def shutdown_vlc() -> str:
-    """
-    Shuts down the VLC media player.
-
-    This function stops the VLC player and resets the vlc_started flag.
-
-    Returns:
-        str: A message indicating that VLC has been shut down, or a message indicating that VLC is not running.
-    """
-    global vlc_started
-    if not vlc_started:
-        return "VLC not running"
-    vlc.shutdown()
-    vlc_started = False
-    return "VLC shutdown"
-
 # ---------- Video tools ----------
-
-@mcp.tool()
-def set_brightness(value: float) -> str:
-    """
-    Sets the brightness level of the video output in VLC.
-
-    Args:
-        value (float): The desired brightness level (0.0 - 1.0).
-
-    Returns:
-        str: A message indicating the brightness level that was set, or an error message if VLC is not running.
-    """
-    if not vlc_started:
-        return "ERROR: VLC is not running"
-    vlc.set_brightness(value)
-    return f"Brightness set to {value}"
-
 
 @mcp.tool()
 def aspect_ratio(ratio: str) -> str:
@@ -263,35 +229,6 @@ def audio_speed(rate: float) -> str:
         return "ERROR: VLC is not running"
     vlc.set_playback_rate(rate)
     return f"Playback speed set to {rate}"
-
-
-@mcp.tool()
-def audio_device(device_id: str) -> str:
-    """
-    Sets the audio output device in VLC.
-
-    Args:
-        device_id (str): The ID of the audio output device.
-
-    Returns:
-        str: A message indicating the audio device that was set, or an error message if VLC is not running.
-    """
-    if not vlc_started:
-        return "ERROR: VLC is not running"
-    vlc.set_audio_device(device_id)
-    return f"Audio device set to {device_id}"
-
-@mcp.tool()
-def list_audio_devices() -> list:
-    """
-    Lists available audio output devices in VLC.
-
-    Returns:
-        list: A list of available audio output device IDs, or an error message if VLC is not running.
-    """
-    if not vlc_started:
-        return ["ERROR: VLC is not running"]
-    return vlc.list_audio_devices()
 
 @mcp.tool()
 def list_movies(refresh: bool = False) -> dict:
