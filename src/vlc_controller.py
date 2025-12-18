@@ -27,7 +27,7 @@ class VLCController:
             "--extraintf", "http",
             "--extraintf", "rc",
             "--http-password", VLC_PASSWORD,
-            "--http-port", VLC_HOST,
+            "--http-port", VLC_PORT,
             "--rc-host", "127.0.0.1:4212",
         ])
         time.sleep(VLC_STARTUP_WAIT)
